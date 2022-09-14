@@ -3,8 +3,8 @@ from os.path import join
 import cv2
 import numpy as np
 
-# skin_db = [0] * 17000000
-# n_skin_db = [0] * 17000000
+skin_prob_db = [0] * 17000000
+n_skin_prob_db = [0] * 17000000
 red_skin = [0] * 256
 green_skin = [0] * 256
 blue_skin = [0] * 256
@@ -35,7 +35,7 @@ def get_img_data(skin_img_list: list, non_skin_img_list: list):
         for h in range(im_h):
             for w in range(im_w):
                 sb, sg, sr = img_skin[h, w]
-                if sb > 225 and sg > 225 and sr > 225:
+                if sb == 255 and sg == 255 and sr == 255:
                     nskin_total += 1
                     nb, ng, nr = img_non_skin[h, w]
                     blue_nskin[nb] += 1
@@ -68,37 +68,14 @@ def convert_img(img_test, skin_np_arr, nskin_np_arr):
                     img_tt[h, w] = (0, 0, 0)
             else:
                 ratio = skin_np_arr[idx] / nskin_np_arr[idx]
-                if ratio > .4:
+                if ratio > 2:
                     img_tt[h, w] = (0, 0, 0)
     cv2.imwrite("Result_" + img_test, img_tt)
     pass
 
 def convert_img_cond(bb, gg, rr):
-    np_b_ns = np.load("np_b_ns.npy")
-    np_b_s = np.load("np_b_s.npy")
-    np_g_ns = np.load("np_g_ns.npy")
-    np_g_s = np.load("np_g_s.npy")
-    np_r_ns = np.load("np_r_ns.npy")
-    np_r_s = np.load("np_r_s.npy")
-    np_total = np.load("np_total.npy")
-
-    skin_t = int(np_total[0][1])
-    nskin_t = int(np_total[1][1])
-    skin_prob = skin_t / (skin_t + nskin_t)
-    nskin_prob = nskin_t / (skin_t + nskin_t)
-    #print(bb, gg, rr)
-    #print(np_b_s[bb], np_g_s[gg], np_r_s[rr])
-    np_b_ps = np_b_s / skin_t
-    np_b_pns = np_b_ns / nskin_t
-    np_g_ps = np_g_s / skin_t
-    np_g_pns = np_g_ns / nskin_t
-    np_r_ps = np_r_s / skin_t
-    np_r_pns = np_r_ns / nskin_t
-
-    prob_skin = skin_prob * float(np_b_ps[bb]) * float(np_g_ps[gg]) * float(np_r_ps[rr])
+    '''prob_skin = skin_prob * float(np_b_ps[bb]) * float(np_g_ps[gg]) * float(np_r_ps[rr])
     prob_nskin = nskin_prob * float(np_b_pns[bb]) * float(np_g_pns[gg]) * float(np_r_pns[rr])
-    #print(prob_skin)
-    #print(prob_nskin)
     norm_skin = prob_skin/(prob_skin+prob_nskin)
     norm_nskin = prob_nskin / (prob_nskin + prob_nskin)
 
@@ -106,7 +83,8 @@ def convert_img_cond(bb, gg, rr):
     if norm_skin>norm_nskin:
         return True
     else:
-        return False
+        return False'''
+    pass
 
 
 if __name__ == '__main__':
@@ -137,18 +115,95 @@ if __name__ == '__main__':
     np.save('np_b_ns', np_b_ns)
     np.save('np_total', np_total)'''
 
+    '''np_b_ns = np.load("np_b_ns.npy")
+    np_b_s = np.load("np_b_s.npy")
+    np_g_ns = np.load("np_g_ns.npy")
+    np_g_s = np.load("np_g_s.npy")
+    np_r_ns = np.load("np_r_ns.npy")
+    np_r_s = np.load("np_r_s.npy")
+    np_total = np.load("np_total.npy")
 
-    sample_img = "multiple_person.PNG"
+    skin_t = int(np_total[0][1])
+    nskin_t = int(np_total[1][1])
+    skin_prob = skin_t / (skin_t + nskin_t)
+    nskin_prob = nskin_t / (skin_t + nskin_t)
+    # print(bb, gg, rr)
+    # print(np_b_s[bb], np_g_s[gg], np_r_s[rr])
+    np_b_ps = np_b_s / skin_t
+    np_b_pns = np_b_ns / nskin_t
+    np_g_ps = np_g_s / skin_t
+    np_g_pns = np_g_ns / nskin_t
+    np_r_ps = np_r_s / skin_t
+    np_r_pns = np_r_ns / nskin_t
+
+    np.save('np_b_ps', np_b_ps)
+    np.save('np_b_pns', np_b_pns)
+    np.save('np_g_ps', np_g_ps)
+    np.save('np_g_pns', np_g_pns)
+    np.save('np_r_ps', np_r_ps)
+    np.save('np_r_pns', np_r_pns)'''
+
+    '''np_b_ps = np.load("np_b_ps.npy")
+    np_b_pns = np.load("np_b_pns.npy")
+    np_g_ps = np.load("np_g_ps.npy")
+    np_g_pns = np.load("np_g_pns.npy")
+    np_r_ps = np.load("np_r_ps.npy")
+    np_r_pns = np.load("np_r_pns.npy")
+    np_total = np.load("np_total.npy")
+
+    skin_t = int(np_total[0][1])
+    nskin_t = int(np_total[1][1])
+    skin_prob = skin_t / (skin_t + nskin_t)
+    nskin_prob = nskin_t / (skin_t + nskin_t)
+
+    for rr in range(256):
+        for gg in range(256):
+            for bb in range(256):
+                prob_skin = skin_prob * float(np_b_ps[bb]) * float(np_g_ps[gg]) * float(np_r_ps[rr])
+                prob_nskin = nskin_prob * float(np_b_pns[bb]) * float(np_g_pns[gg]) * float(np_r_pns[rr])
+                norm_skin = prob_skin / (prob_skin + prob_nskin)
+                norm_nskin = prob_nskin / (prob_skin + prob_nskin)
+                idx = 255*255*bb + 255*gg + rr
+                skin_prob_db[idx] = norm_skin
+                n_skin_prob_db[idx] = norm_nskin
+    np_skin_prob_db = np.array(skin_prob_db)
+    np_n_skin_prob_db = np.array(n_skin_prob_db)
+    np.save('np_skin_prob_db', np_skin_prob_db)
+    np.save('np_n_skin_prob_db', np_n_skin_prob_db)'''
+
+    np_skin_prob_db = np.load("np_skin_prob_db.npy")
+    np_n_skin_prob_db = np.load("np_n_skin_prob_db.npy")
+    print(np.count_nonzero(np_skin_prob_db))
+    print(np.count_nonzero(np_n_skin_prob_db))
+    np_ratio_prob = np_skin_prob_db[:255*255*255]/np_n_skin_prob_db[:255*255*255]
+    print(np.size(np_ratio_prob))
+    np.save('np_ratio_prob', np_ratio_prob)
+
+    '''sample_img = "kk.jpg"
     sample_img_c = cv2.imread(sample_img)
     im_h, im_w, _ = sample_img_c.shape
     for h in range(im_h):
         for w in range(im_w):
             #print(h, w)
             b, g, r = sample_img_c[h, w]
-            s = convert_img_cond(b, g, r)
-            if s:
+
+            idx = b * 255 * 255 + g * 255 + r
+            skin = np_skin_prob_db[idx]
+            n_skin = np_n_skin_prob_db[idx]
+            if(b == 167 and g == 168 and r == 171):
+                print(skin/n_skin)
+            if r<g:
+                if(skin/n_skin) > 1:
+                    sample_img_c[h, w] = (0, 0, 0)
+                    continue
+            if b>r:
+                if (skin / n_skin) > 1:
+                    sample_img_c[h, w] = (0, 0, 0)
+                    continue
+            if (skin/n_skin) > .4:
                 sample_img_c[h, w] = (0, 0, 0)
-    cv2.imwrite("Result_" + sample_img, sample_img_c)
+                continue
+    cv2.imwrite("Result_" + sample_img, sample_img_c)'''
     #convert_img_cond(rr, gg, bb)
 
     #total_skin_prob = skin_t/nskin_t
