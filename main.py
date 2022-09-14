@@ -1,3 +1,4 @@
+import sys
 from os import listdir
 from os.path import join
 import cv2
@@ -87,6 +88,16 @@ def convert_img_cond(bb, gg, rr):
     pass
 
 
+def sumPairs(lst):
+    diffs = []
+    for i, x in enumerate(lst):
+        for j, y in enumerate(lst):
+            if i != j:
+                diffs.append(abs(x - y))
+
+    return int(sum(diffs) / 2)
+
+
 if __name__ == '__main__':
     '''skin_img_path = "D:\ibtd\ibtd\Mask"
     skin_images = get_files_from_path(skin_img_path)
@@ -171,39 +182,75 @@ if __name__ == '__main__':
     np.save('np_skin_prob_db', np_skin_prob_db)
     np.save('np_n_skin_prob_db', np_n_skin_prob_db)'''
 
+
+    '''np.seterr(invalid='ignore')
     np_skin_prob_db = np.load("np_skin_prob_db.npy")
     np_n_skin_prob_db = np.load("np_n_skin_prob_db.npy")
-    print(np.count_nonzero(np_skin_prob_db))
-    print(np.count_nonzero(np_n_skin_prob_db))
-    np_ratio_prob = np_skin_prob_db[:255*255*255]/np_n_skin_prob_db[:255*255*255]
+    print(np.size(np_skin_prob_db))
+    print(np.size(np_n_skin_prob_db))
+    np_ratio_prob = np_skin_prob_db/np_n_skin_prob_db
     print(np.size(np_ratio_prob))
-    np.save('np_ratio_prob', np_ratio_prob)
+    np.save('np_ratio_prob', np_ratio_prob)'''
 
-    '''sample_img = "kk.jpg"
+
+    ratio_total = np.load('np_ratio_prob.npy')
+    sample_img = "putin.PNG"
     sample_img_c = cv2.imread(sample_img)
     im_h, im_w, _ = sample_img_c.shape
     for h in range(im_h):
         for w in range(im_w):
             #print(h, w)
             b, g, r = sample_img_c[h, w]
-
+            b = int(b)
+            g = int(g)
+            r = int(r)
             idx = b * 255 * 255 + g * 255 + r
-            skin = np_skin_prob_db[idx]
-            n_skin = np_n_skin_prob_db[idx]
-            if(b == 167 and g == 168 and r == 171):
-                print(skin/n_skin)
-            if r<g:
-                if(skin/n_skin) > 1:
+            try:
+                ratio = ratio_total[idx]
+            except IndexError:
+                print("Index out of bounds. idx = "+ str(idx))
+                print(b,g,r)
+                sys.exit()
+            if ratio == np.nan:
+                continue
+
+
+            if g > r:
+                if(ratio) > 1:
                     sample_img_c[h, w] = (0, 0, 0)
-                    continue
-            if b>r:
-                if (skin / n_skin) > 1:
+                continue
+            if b > r:
+                if (ratio) > 1:
                     sample_img_c[h, w] = (0, 0, 0)
-                    continue
-            if (skin/n_skin) > .4:
+                continue
+            abs1 = abs(int(r)-int(b))
+            abs2 = abs(int(g)-int(b))
+            abs3 = abs(int(r) - int(g))
+
+            reddish = r + r - b - g
+            bluish = b + b - r - g
+            greenish = g + g - b - r
+            sum_diff = abs1 + abs2 + abs3
+
+            if r == 142 and g == 136 and b == 146:
+                print(ratio)
+                print(sum_diff)
+                print(abs1, abs2, abs3)
+                print(reddish)
+
+            if reddish>130 or bluish > 130 or greenish > 130:
+                if ratio>1.2:
+                    sample_img_c[h, w] = (0, 0, 0)
+                continue
+
+            if sum_diff < 50:
+                if ratio>1.2:
+                    sample_img_c[h, w] = (0, 0, 0)
+                continue
+            if (ratio) > .5:
                 sample_img_c[h, w] = (0, 0, 0)
                 continue
-    cv2.imwrite("Result_" + sample_img, sample_img_c)'''
+    cv2.imwrite("Result_" + sample_img, sample_img_c)
     #convert_img_cond(rr, gg, bb)
 
     #total_skin_prob = skin_t/nskin_t
